@@ -1,4 +1,4 @@
-package chabot
+package chanbo
 
 import (
 	"bytes"
@@ -13,13 +13,13 @@ import (
 	"time"
 )
 
-type Chabot struct {
+type Chanbo struct {
 	BotApiKey   string
 	ChannelName string
 }
 
-func New() *Chabot {
-	return &Chabot{
+func New() *Chanbo {
+	return &Chanbo{
 		BotApiKey:   os.Getenv("BOT_API_KEY"),
 		ChannelName: os.Getenv("CHANNEL_NAME"),
 	}
@@ -46,7 +46,7 @@ type Response struct {
 	} `json:"result"`
 }
 
-func (c Chabot) SendMessage(message string) error {
+func (c Chanbo) SendMessage(message string) error {
 	urlTemplate := "https://api.telegram.org/bot%s/%s?chat_id=%s&%s=%s"
 	url := fmt.Sprintf(urlTemplate, c.BotApiKey, "sendMessage", c.ChannelName, "text", message)
 
@@ -71,7 +71,7 @@ func (c Chabot) SendMessage(message string) error {
 	return nil
 }
 
-func (c Chabot) SendPhoto(path string) error {
+func (c Chanbo) SendPhoto(path string) error {
 	urlTempl := "https://api.telegram.org/bot%s/%s?chat_id=%s"
 	url := fmt.Sprintf(urlTempl, c.BotApiKey, "sendPhoto", c.ChannelName)
 

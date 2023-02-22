@@ -1,3 +1,3 @@
-module github.com/olegmlsn/chabot
+module github.com/olegmlsn/chanbo
 
 go 1.19
