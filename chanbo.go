@@ -52,10 +52,10 @@ func (c Chanbo) SendMessage(message string) error {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return fmt.Errorf("chabot: SendMesage: http.Get error: %w", err)
+		return fmt.Errorf("chanbo: SendMesage: http.Get error: %w", err)
 	}
 	if resp.Status != "200 OK" {
-		return fmt.Errorf("Chabot: SendMessage: return code not 200: %w", err)
+		return fmt.Errorf("chanbo: SendMessage: return code not 200: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -63,7 +63,7 @@ func (c Chanbo) SendMessage(message string) error {
 	body, err := ioutil.ReadAll(resp.Body)
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return fmt.Errorf("Chabot: SendMessage: json unmarshal error: %w", err)
+		return fmt.Errorf("chanbo: SendMessage: json unmarshal error: %w", err)
 	}
 
 	fmt.Println(result)
@@ -77,7 +77,7 @@ func (c Chanbo) SendPhoto(path string) error {
 
 	file, err := os.Open(path)
 	if err != nil {
-		return fmt.Errorf("chabot: SendPhoto: http.Get error: %w", err)
+		return fmt.Errorf("chanbo: SendPhoto: http.Get error: %w", err)
 	}
 
 	client := &http.Client{
@@ -89,26 +89,26 @@ func (c Chanbo) SendPhoto(path string) error {
 
 	fw, err := writer.CreateFormFile("photo", filepath.Base(path))
 	if err != nil {
-		return fmt.Errorf("chabot: CreateFormFile: error: %w", err)
+		return fmt.Errorf("chanbo: CreateFormFile: error: %w", err)
 	}
 
 	_, err = io.Copy(fw, file)
 	if err != nil {
-		return fmt.Errorf("chabot: io.Copy: error: %w", err)
+		return fmt.Errorf("chanbo: io.Copy: error: %w", err)
 	}
 
 	writer.Close()
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body.Bytes()))
 	if err != nil {
-		return fmt.Errorf("chabot: NewRequest: error: %w", err)
+		return fmt.Errorf("chanbo: NewRequest: error: %w", err)
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("chabot: SendPhoto: client.Do error: %w", err)
+		return fmt.Errorf("chanbo: SendPhoto: client.Do error: %w", err)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("chabot: NewRequest: error: %w", err)
+		return fmt.Errorf("chanbo: NewRequest: error: %w", err)
 	}
 
 	defer resp.Body.Close()
@@ -118,7 +118,58 @@ func (c Chanbo) SendPhoto(path string) error {
 	fmt.Println(string(respBody))
 	err = json.Unmarshal(respBody, &result)
 	if err != nil {
-		return fmt.Errorf("Chabot: SendPhoto: json unmarshal error: %w", err)
+		return fmt.Errorf("chanbo: SendPhoto: json unmarshal error: %w", err)
+	}
+
+	fmt.Println(result)
+
+	return nil
+}
+
+func (c Chanbo) SendPhotoFromBytes(photo []byte) error {
+	urlTempl := "https://api.telegram.org/bot%s/%s?chat_id=%s"
+	url := fmt.Sprintf(urlTempl, c.BotApiKey, "sendPhoto", c.ChannelName)
+
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	fw, err := writer.CreateFormFile("photo", "photo")
+	if err != nil {
+		return fmt.Errorf("chanbo: CreateFormFile: error: %w", err)
+	}
+
+	//_, err = io.Copy(fw, photo)
+	_, err = fw.Write(photo)
+	if err != nil {
+		return fmt.Errorf("chanbo: io.Copy: error: %w", err)
+	}
+
+	writer.Close()
+	req, err := http.NewRequest("POST", url, bytes.NewReader(body.Bytes()))
+	if err != nil {
+		return fmt.Errorf("chanbo: NewRequest: error: %w", err)
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("chanbo: SendPhoto: client.Do error: %w", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("chanbo: NewRequest: error: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	var result Response
+	respBody, err := ioutil.ReadAll(resp.Body)
+	fmt.Println(string(respBody))
+	err = json.Unmarshal(respBody, &result)
+	if err != nil {
+		return fmt.Errorf("chanbo: SendPhoto: json unmarshal error: %w", err)
 	}
 
 	fmt.Println(result)
